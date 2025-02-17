@@ -28,4 +28,11 @@ public class HomeController : Controller
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+     [HttpPost]
+    public IActionResult Index(string Fullname,string address )
+    {
+        string str0utput=$"Xin chào {Fullname} đến từ {address}";
+        ViewBag.message=str0utput;
+        return View();
+    }
 }

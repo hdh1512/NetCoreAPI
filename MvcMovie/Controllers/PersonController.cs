@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MvcMovie.Data;
 using MvcMovie.Models;
-using MvcMovie.Process.Models;
-using System.Data;
+using MvcMovie.Models.Process;
+using OfficeOpenXml;
 
 namespace MvcMovie.Controllers
 {
@@ -113,8 +113,8 @@ namespace MvcMovie.Controllers
         }
         public async Task<IActionResult> Upload()
         {
-    
-        return View(); 
+
+            return View(); 
         }
 
         [HttpPost] 
@@ -132,11 +132,11 @@ namespace MvcMovie.Controllers
                 {
                     var fileName = DateTime.Now.ToShortTimeString() + fileExtension;
                     var filePath = Path.Combine(Directory.GetCurrentDirectory() + "/Uploads/Excels", fileName);
-                    var fileLocation = new FileInfo(filePath).ToString();
+                    var filelocation = new FileInfo(filePath).ToString();
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
-                        var dt = _excelProcess.ExcelToDataTable(fileLocation);
+                        var dt = _excelProcess.ExcelToDataTable(filelocation);
                         for (int i = 0; i < dt.Rows.Count; i++)
                         {
                             var ps = new Person();
@@ -151,6 +151,26 @@ namespace MvcMovie.Controllers
                 }
             }
             return View();
+        }
+        public ActionResult Download()
+        {
+            // Name the file when downloading
+            var fileName = "YourFileName" + ".xlsx";
+            using (ExcelPackage excelPackage = new ExcelPackage())
+            {
+                ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("Sheet 1");
+                // add some text to cell A1
+                worksheet.Cells["A1"].Value = "PersonID";
+                worksheet.Cells["B1"].Value = "FullName";
+                worksheet.Cells["C1"].Value = "Address";
+                // get all Person
+                var personList = _context.Person.ToList();
+                // fill data to worksheet
+                worksheet.Cells["A2"].LoadFromCollection(personList);
+                var stream = new MemoryStream(excelPackage.GetAsByteArray());
+                // download file
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
         }
         }
     }
